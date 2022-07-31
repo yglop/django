@@ -9,11 +9,8 @@ import random
 def home(request):
     books = Book.objects.all()
     if books:
-        book1, book2, book3, book4 = random.choice(books), random.choice(books), random.choice(books), random.choice(books)
-        book5, book6, book7, book8 = random.choice(books), random.choice(books), random.choice(books), random.choice(books)
-        return render(request, 'main/home.html', {'book1': book1, 'book2': book2, 'book3': book3, 'book4': book4,
-                                                  'book5': book5, 'book6': book6, 'book7': book7, 'book8': book8,
-                                                  })
+        bookss = [random.choice(books) for i in range(8)]
+        return render(request, 'main/home.html', {'books': bookss})
     else:
         return render(request, 'main/home.html', {})
 
@@ -54,6 +51,7 @@ def logoutUser(request):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Customer'])
 def user_settings(request):
+    # don't remember how it works, but everything here is important
     customer = request.user.customer
     customer_settings_form = CustomerSettingsForm(instance=customer)
 
@@ -94,11 +92,13 @@ def become_seller(request):
 def user_page(request, id):
     customer = Customer.objects.get(id=id)
 
+    # books that the user have
     books_have = [i.book for i in BooksHave.objects.all() if i.owner == customer]
     data_have = {}
     for i in books_have:
         data_have[i.name] = i.id
 
+    # books that the user has put up for sale
     books_sale = [i for i in Book.objects.all() if i.seller == customer]
     data_sale = {}
     for i in books_sale:
@@ -123,11 +123,6 @@ def book_creation(request):
             book_description = form.cleaned_data.get('description')
             book_picture = form.cleaned_data.get('picture')
             book_file = form.cleaned_data.get('book_file')
-
-            if ',' in book_name:
-                a = book_name.count(',')
-                for i in range(a):
-                    book_name = book_name.replace(',', ';')
 
             books = Book.objects.all()
             if book_name not in books:
@@ -161,13 +156,6 @@ def book_redaction(request, id):
         form = BookRedactionForm(request.POST, request.FILES, instance=book)
 
         if form.is_valid():
-            book_name = form.cleaned_data.get('name')
-            if ',' in book_name:
-                a = book_name.count(',')
-                for i in range(a):
-                    book_name = book_name.replace(',', ';')
-
-            form.instance.name = book_name
             form.save()
 
             return redirect('/book_management')
@@ -188,6 +176,7 @@ def book_buy(request, id):
     book = Book.objects.get(id=id)
     books_have = [i.book for i in BooksHave.objects.all() if i.owner == customer]
 
+    # check if the user are already have this book, or the user is the seller
     dummi_flag = False
     if (book in books_have) or (book.seller == customer):
         dummi_flag = True
@@ -210,7 +199,7 @@ def book_management(request):
 
     books_have = [i.book for i in BooksHave.objects.all() if i.owner == user.customer]
     books_sale = [i for i in Book.objects.all() if i.seller == user.customer]
-    print(books_have)
+
     context = {'books_have': books_have, 'books_sale': books_sale}
     return render(request, 'main/book_management.html', context)
 
