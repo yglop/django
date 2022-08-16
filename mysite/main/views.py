@@ -51,7 +51,7 @@ def logoutUser(request):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['Customer'])
 def user_settings(request):
-    # don't remember how it works, but everything here is important
+    # everything here is important
     customer = request.user.customer
     customer_settings_form = CustomerSettingsForm(instance=customer)
 
